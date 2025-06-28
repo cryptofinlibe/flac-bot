@@ -1,0 +1,97 @@
+
+===== Structure of table: positions =====
+id | integer | Nullable: NO | Default: nextval('positions_id_seq'::regclass)
+pair | text | Nullable: NO | Default: None
+position_type | text | Nullable: NO | Default: None
+status | text | Nullable: NO | Default: None
+entry_time | timestamp without time zone | Nullable: NO | Default: None
+exit_time | timestamp without time zone | Nullable: YES | Default: None
+entry_price | numeric | Nullable: YES | Default: None
+exit_price | numeric | Nullable: YES | Default: None
+stop_loss | numeric | Nullable: YES | Default: None
+take_profit | numeric | Nullable: YES | Default: None
+pnl | numeric | Nullable: YES | Default: None
+notes | text | Nullable: YES | Default: None
+
+===== Structure of table: strategy_log =====
+id | integer | Nullable: NO | Default: nextval('strategy_log_id_seq'::regclass)
+pair | text | Nullable: NO | Default: None
+timeframe | text | Nullable: NO | Default: None
+date | timestamp without time zone | Nullable: NO | Default: None
+signal | text | Nullable: NO | Default: None
+source | text | Nullable: YES | Default: None
+confidence | numeric | Nullable: YES | Default: None
+extra | jsonb | Nullable: YES | Default: None
+
+===== Structure of table: watchlist =====
+id | integer | Nullable: NO | Default: nextval('watchlist_id_seq'::regclass)
+pair | text | Nullable: NO | Default: None
+enabled | boolean | Nullable: YES | Default: true
+mode | text | Nullable: YES | Default: 'futures'::text
+default_qty | numeric | Nullable: YES | Default: None
+max_loss_per_trade | numeric | Nullable: YES | Default: None
+rr_ratio | numeric | Nullable: YES | Default: None
+notes | text | Nullable: YES | Default: None
+
+===== Structure of table: sentiment_data =====
+id | integer | Nullable: NO | Default: nextval('sentiment_data_id_seq'::regclass)
+pair | text | Nullable: YES | Default: None
+timestamp | timestamp without time zone | Nullable: NO | Default: None
+source | text | Nullable: YES | Default: None
+sentiment_score | numeric | Nullable: YES | Default: None
+sentiment_summary | text | Nullable: YES | Default: None
+raw_xml | text | Nullable: YES | Default: None
+
+===== Structure of table: onchain_data =====
+id | integer | Nullable: NO | Default: nextval('onchain_data_id_seq'::regclass)
+pair | text | Nullable: YES | Default: None
+timestamp | timestamp without time zone | Nullable: NO | Default: None
+metric | text | Nullable: YES | Default: None
+value | numeric | Nullable: YES | Default: None
+extra | jsonb | Nullable: YES | Default: None
+raw_xml | text | Nullable: YES | Default: None
+
+===== Structure of table: smc_map =====
+id | integer | Nullable: NO | Default: nextval('smc_map_id_seq'::regclass)
+pair | text | Nullable: NO | Default: None
+date | date | Nullable: NO | Default: None
+bias | text | Nullable: YES | Default: None
+zone_description | text | Nullable: YES | Default: None
+raw_xml | text | Nullable: YES | Default: None
+
+===== Structure of table: snapshot_daily =====
+id | integer | Nullable: NO | Default: nextval('snapshot_daily_id_seq'::regclass)
+pair | text | Nullable: NO | Default: None
+date | date | Nullable: NO | Default: None
+trend | text | Nullable: YES | Default: None
+bias | text | Nullable: YES | Default: None
+smc_zone | text | Nullable: YES | Default: None
+created_at | timestamp without time zone | Nullable: YES | Default: CURRENT_TIMESTAMP
+
+===== Structure of table: snapshot_4h =====
+id | integer | Nullable: NO | Default: nextval('snapshot_4h_id_seq'::regclass)
+pair | text | Nullable: NO | Default: None
+datetime | timestamp without time zone | Nullable: NO | Default: None
+structure | text | Nullable: YES | Default: None
+signal | text | Nullable: YES | Default: None
+confidence | double precision | Nullable: YES | Default: None
+created_at | timestamp without time zone | Nullable: YES | Default: CURRENT_TIMESTAMP
+
+===== Structure of table: snapshot_15m =====
+id | integer | Nullable: NO | Default: nextval('snapshot_15m_id_seq'::regclass)
+pair | text | Nullable: NO | Default: None
+datetime | timestamp without time zone | Nullable: NO | Default: None
+entry_signal | text | Nullable: YES | Default: None
+rsi | double precision | Nullable: YES | Default: None
+volume | double precision | Nullable: YES | Default: None
+macd | double precision | Nullable: YES | Default: None
+adx | double precision | Nullable: YES | Default: None
+created_at | timestamp without time zone | Nullable: YES | Default: CURRENT_TIMESTAMP
+
+===== Structure of table: narrative_tracker =====
+id | integer | Nullable: NO | Default: nextval('narrative_tracker_id_seq'::regclass)
+pair | text | Nullable: NO | Default: None
+narrative | text | Nullable: YES | Default: None
+timeframe | text | Nullable: YES | Default: None
+note | text | Nullable: YES | Default: None
+detected_on | timestamp without time zone | Nullable: YES | Default: CURRENT_TIMESTAMP

@@ -2,6 +2,8 @@ import os
 from datetime import datetime
 import ccxt
 from FLAC.db.db_writer import insert_position, update_position_exit
+# from FLAC.db.db_config import DB_CONFIG
+from FLAC.config.db_config import DB_CONFIG
 import psycopg2
 
 # Binance Setup
@@ -15,14 +17,6 @@ BINANCE = ccxt.binance({
 DATA_PATH = "FLAC/data/logs"
 ENTRY_LOG = os.path.join(DATA_PATH, "dummy_entry.log")
 
-# DB Config (optional: pindahkan ke config file jika perlu)
-DB_CONFIG = {
-    "dbname": os.getenv("DB_NAME"),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASSWORD"),
-    "host": os.getenv("DB_HOST"),
-    "port": int(os.getenv("DB_PORT")),
-}
 
 def get_price(pair):
     try:

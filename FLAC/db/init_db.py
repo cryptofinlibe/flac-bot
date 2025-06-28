@@ -1,13 +1,6 @@
 import psycopg2
-
-# Konfigurasi koneksi (bisa pindah ke .env atau config JSON nanti)
-DB_CONFIG = {
-    "dbname": os.getenv("DB_NAME"),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASSWORD"),
-    "host": os.getenv("DB_HOST"),
-    "port": int(os.getenv("DB_PORT")),
-}
+# from FLAC.db.db_config import DB_CONFIG
+from FLAC.config.db_config import DB_CONFIG
 
 TABLE_QUERIES = [
     """
