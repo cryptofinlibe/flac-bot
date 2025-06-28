@@ -1,0 +1,7 @@
+__pycache__/
+*.log
+*.csv
+.venv/
+.env
+token.txt
+.replacements.txt

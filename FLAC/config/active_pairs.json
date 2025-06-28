@@ -1,0 +1,8 @@
+{
+  "active_pairs": ["BTC", "SOL", "PEPE", "BNB", "AVAX", "TRX", "DOGE", "LINK", "TON", "ETH", "SUI"],
+  "daily": ["BTC/USDT", "SOL/USDT", "PEPE/USDT", "BNB/USDT", "AVAX/USDT", "TRX/USDT", "DOGE/USDT", "LINK/USDT", "TON/USDT", "ETH/USDT", "SUI/USDT"],
+  "4h": ["BTC/USDT", "SOL/USDT", "PEPE/USDT", "BNB/USDT", "AVAX/USDT", "TRX/USDT", "DOGE/USDT", "LINK/USDT", "TON/USDT", "ETH/USDT", "SUI/USDT"],
+  "hourly": ["BTC/USDT", "SOL/USDT", "PEPE/USDT", "BNB/USDT", "AVAX/USDT", "TRX/USDT", "DOGE/USDT", "LINK/USDT", "TON/USDT", "ETH/USDT", "SUI/USDT"]
+}
+
+

@@ -1,0 +1,8 @@
+ccxt==4.1.94
+pandas==2.2.2
+requests==2.31.0
+numpy==1.26.4
+python-telegram-bot==20.7
+psycopg2-binary==2.9.9
+lxml==5.1.0
+python-dotenv==1.0.1
