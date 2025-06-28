@@ -1,14 +1,11 @@
 import ccxt
 from datetime import datetime
-from FLAC.db.db_writer import get_open_positions, update_position_exit
+from FLAC.db.db_writer import get_open_positions, update_position_exit, get_tp_sl_for_pair
 from FLAC.utils.notifier import send_telegram_message
 
 BINANCE = ccxt.binance({
     'options': {'defaultType': 'spot'}
 })
-
-TP_PCT = 0.03   # Take profit 3%
-SL_PCT = 0.015  # Stop loss 1.5%
 
 def get_price(pair):
     try:
@@ -18,9 +15,10 @@ def get_price(pair):
         return None
 
 def run_exit_tracker():
+    print(f"🕐 Exit tracker running at {datetime.utcnow()}")
     open_positions = get_open_positions()
     if not open_positions:
-        print("📭 No open positions in DB.")
+        print("📟 No open positions in DB.")
         return
 
     messages = []
@@ -30,6 +28,8 @@ def run_exit_tracker():
         entry_price = float(pos['entry_price'])
         position_id = pos['id']
 
+        tp_pct, sl_pct = get_tp_sl_for_pair(pair)
+
         now_price = get_price(pair)
         if now_price is None:
             continue
@@ -37,9 +37,9 @@ def run_exit_tracker():
         change_pct = (now_price - entry_price) / entry_price
         status = None
 
-        if change_pct >= TP_PCT:
+        if change_pct >= tp_pct:
             status = "TP"
-        elif change_pct <= -SL_PCT:
+        elif change_pct <= -sl_pct:
             status = "SL"
 
         if status:
@@ -61,7 +61,7 @@ def run_exit_tracker():
             print(m)
         send_telegram_message("💼 Exit Tracker:\n" + "\n".join(messages))
     else:
-        print("📊 No TP/SL triggered.")
+        print("📈 No TP/SL triggered.")
 
 if __name__ == "__main__":
     run_exit_tracker()

@@ -1,14 +1,16 @@
 import os
 import json
+import pandas as pd
 from datetime import datetime
 from FLAC.utils.smart_fetch import smart_fetch
 from FLAC.utils.notifier import send_telegram_message
+from FLAC.scripts.merge_anchor_with_ohlcv import merge_anchor_with_ohlcv as run_merge
+
 
 def save_snapshot(df, pair, timeframe):
     folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"../data/snapshots/{timeframe}")
     os.makedirs(folder, exist_ok=True)
-    date_str = datetime.utcnow().strftime("%Y%m%d")
-    pair_formatted = pair.replace("USDT", "_USDT")
+    pair_formatted = pair.replace("/", "_")
     file_path = os.path.join(folder, f"{pair_formatted}.csv")
 
     if os.path.exists(file_path):
@@ -21,6 +23,7 @@ def save_snapshot(df, pair, timeframe):
 
     df.to_csv(file_path, index=False)
     print(f"✅ Saved snapshot for {pair} → {file_path}")
+
 
 # Load config
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -36,15 +39,14 @@ failed_pairs = []
 
 print(f"\U0001F680 Running Daily Pipeline for {today}")
 for full_pair in pairs:
-    pair = full_pair.replace("/", "")
     print(f"\U0001F4E5 Fetching {full_pair} ...")
-    df = smart_fetch(pair, timeframe='1d', default_market='spot')
+    df = smart_fetch(full_pair.replace("/", ""), timeframe='1d', default_market='spot')
     if df is not None and not df.empty:
-        save_snapshot(df, pair, "1d")
+        save_snapshot(df, full_pair, "1d")
         success_count += 1
     else:
-        print(f"❌ Failed to fetch {pair}")
-        failed_pairs.append(pair)
+        print(f"❌ Failed to fetch {full_pair}")
+        failed_pairs.append(full_pair)
 
 # Notify & Merge
 if success_count >= 1:
@@ -54,8 +56,7 @@ if success_count >= 1:
     msg += f"\n\U0001F680 Merging SMC + OHLCV..."
     send_telegram_message(msg)
 
-    from FLAC.scripts.merge_anchor_with_ohlcv import merge_anchor_with_ohlcv as run_merge
-    run_merge()
+    run_merge(timeframe="1d")
     send_telegram_message("✅ Merge complete. `smc_merged.csv` updated.")
 else:
     send_telegram_message("❌ Daily pipeline failed: No data fetched. Merge skipped.")
