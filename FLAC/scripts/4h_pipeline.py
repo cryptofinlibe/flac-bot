@@ -4,6 +4,11 @@ import pandas as pd
 from datetime import datetime
 from FLAC.utils.smart_fetch import smart_fetch
 from FLAC.utils.notifier import send_telegram_message
+from FLAC.db.db_writer import insert_ohlcv
+from FLAC.db.db_reader import get_pairs_by_timeframe
+
+# Optional: Simpan backup lokal ke CSV
+SAVE_CSV = False
 
 def save_snapshot(df, pair, timeframe):
     folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"../data/snapshots/{timeframe}")
@@ -20,36 +25,42 @@ def save_snapshot(df, pair, timeframe):
         df = pd.concat([existing, df], ignore_index=True)
 
     df.to_csv(file_path, index=False)
-    print(f"✅ Saved 4H snapshot for {pair} → {file_path}")
+    print(f"✅ Saved snapshot for {pair} → {file_path}")
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_PATH = os.path.abspath(os.path.join(BASE_DIR, "../config/active_pairs.json"))
+pairs = get_pairs_by_timeframe('4h')
 
-with open(CONFIG_PATH, "r") as f:
-    config = json.load(f)
-pairs = config.get("4h", [])
-
-today = datetime.utcnow().strftime("%Y-%m-%d")
+now = datetime.utcnow().strftime("%Y-%m-%d %H:%M")
 success_count = 0
 failed_pairs = []
 
-print(f"⏳ Running 4H Pipeline for {today}")
+print(f"🚀 Running 4H Pipeline at {now}")
 for full_pair in pairs:
     pair = full_pair.replace("/", "")
     print(f"📥 Fetching {full_pair} ...")
     df = smart_fetch(pair, timeframe='4h', default_market='spot')
+
     if df is not None and not df.empty:
-        save_snapshot(df, pair, "4h")
+        # Optional CSV backup
+        if SAVE_CSV:
+            save_snapshot(df, pair, "4h")
+
+        # Insert into PostgreSQL ohlcv table
+        df["pair"] = full_pair
+        df["timeframe"] = "4h"
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        insert_ohlcv(df)
+
         success_count += 1
     else:
         print(f"❌ Failed to fetch {pair}")
         failed_pairs.append(pair)
 
-# Telegram Notification
+# Notify
 if success_count >= 1:
-    msg = f"⚠️ 4H pipeline partial: {success_count}/{len(pairs)} fetched."
+    msg = f"✅ 4H pipeline completed: {success_count}/{len(pairs)} pairs fetched."
     if failed_pairs:
         msg += f"\n❌ Failed: {', '.join(failed_pairs)}"
-    send_telegram_message(msg)
 else:
-    send_telegram_message("❌ 4H pipeline failed: No data fetched.")
+    msg = "❌ 4H pipeline failed: No data fetched."
+
+send_telegram_message(msg)

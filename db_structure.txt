@@ -1,42 +1,135 @@
 
+===== Structure of table: trend_state =====
+id | integer | Nullable: NO | Default: nextval('trend_state_id_seq'::regclass)
+symbol | character varying | Nullable: NO | Default: None
+timeframe | character varying | Nullable: NO | Default: None
+trend | character varying | Nullable: NO | Default: None
+detected_at | timestamp without time zone | Nullable: YES | Default: now()
+
+===== Structure of table: orders =====
+id | integer | Nullable: NO | Default: nextval('orders_id_seq'::regclass)
+symbol | text | Nullable: NO | Default: None
+order_time | timestamp without time zone | Nullable: NO | Default: None
+order_type | text | Nullable: YES | Default: None
+price | numeric | Nullable: YES | Default: None
+quantity | numeric | Nullable: YES | Default: None
+status | text | Nullable: YES | Default: None
+exchange_order_id | text | Nullable: YES | Default: None
+
+===== Structure of table: signals =====
+id | integer | Nullable: NO | Default: nextval('signals_id_seq'::regclass)
+strategy | text | Nullable: NO | Default: None
+symbol | text | Nullable: NO | Default: None
+signal_time | timestamp without time zone | Nullable: NO | Default: None
+signal_type | text | Nullable: YES | Default: None
+confidence | numeric | Nullable: YES | Default: None
+notes | text | Nullable: YES | Default: None
+
+===== Structure of table: smc_map =====
+id | integer | Nullable: NO | Default: nextval('smc_map_id_seq'::regclass)
+pair | text | Nullable: YES | Default: None
+date | date | Nullable: YES | Default: None
+bias | text | Nullable: YES | Default: None
+zone_description | text | Nullable: YES | Default: None
+raw_xml | text | Nullable: YES | Default: None
+structure | text | Nullable: YES | Default: None
+last_event | text | Nullable: YES | Default: None
+position | text | Nullable: YES | Default: None
+supply_zone | text | Nullable: YES | Default: None
+demand_zone | text | Nullable: YES | Default: None
+status | text | Nullable: YES | Default: None
+note | text | Nullable: YES | Default: None
+trade_priority | text | Nullable: YES | Default: None
+mode | text | Nullable: YES | Default: None
+tag | text | Nullable: YES | Default: None
+entry_type | text | Nullable: YES | Default: None
+entry_range | text | Nullable: YES | Default: None
+
+===== Structure of table: smc_merged =====
+id | integer | Nullable: NO | Default: nextval('smc_merged_id_seq'::regclass)
+pair | text | Nullable: NO | Default: None
+date | date | Nullable: NO | Default: None
+timeframe | text | Nullable: NO | Default: None
+bias | text | Nullable: YES | Default: None
+zone_description | text | Nullable: YES | Default: None
+close | numeric | Nullable: YES | Default: None
+high | numeric | Nullable: YES | Default: None
+low | numeric | Nullable: YES | Default: None
+volume | numeric | Nullable: YES | Default: None
+trend | text | Nullable: YES | Default: None
+created_at | timestamp without time zone | Nullable: YES | Default: CURRENT_TIMESTAMP
+
+===== Structure of table: pair_config =====
+pair | text | Nullable: NO | Default: None
+coin | text | Nullable: YES | Default: None
+is_active | boolean | Nullable: YES | Default: true
+timeframes | ARRAY | Nullable: YES | Default: None
+type | text | Nullable: YES | Default: None
+source | text | Nullable: YES | Default: None
+added_on | timestamp with time zone | Nullable: YES | Default: now()
+market_type | text | Nullable: YES | Default: 'spot'::text
+
+===== Structure of table: channel_ingest_tracker =====
+id | integer | Nullable: NO | Default: nextval('channel_ingest_tracker_id_seq'::regclass)
+channel_name | text | Nullable: NO | Default: None
+last_timestamp | timestamp without time zone | Nullable: NO | Default: None
+updated_at | timestamp without time zone | Nullable: YES | Default: CURRENT_TIMESTAMP
+
+===== Structure of table: volatility_logs =====
+id | integer | Nullable: NO | Default: nextval('volatility_logs_id_seq'::regclass)
+symbol | text | Nullable: YES | Default: None
+time_logged | timestamp without time zone | Nullable: YES | Default: None
+price_change | numeric | Nullable: YES | Default: None
+volume | numeric | Nullable: YES | Default: None
+vol_ma | numeric | Nullable: YES | Default: None
+atr | numeric | Nullable: YES | Default: None
+atr_ma | numeric | Nullable: YES | Default: None
+is_spike | boolean | Nullable: YES | Default: None
+notes | text | Nullable: YES | Default: None
+
 ===== Structure of table: positions =====
 id | integer | Nullable: NO | Default: nextval('positions_id_seq'::regclass)
 pair | text | Nullable: NO | Default: None
-position_type | text | Nullable: NO | Default: None
-status | text | Nullable: NO | Default: None
-entry_time | timestamp without time zone | Nullable: NO | Default: None
-exit_time | timestamp without time zone | Nullable: YES | Default: None
 entry_price | numeric | Nullable: YES | Default: None
 exit_price | numeric | Nullable: YES | Default: None
-stop_loss | numeric | Nullable: YES | Default: None
-take_profit | numeric | Nullable: YES | Default: None
-pnl | numeric | Nullable: YES | Default: None
+quantity | numeric | Nullable: YES | Default: None
+direction | text | Nullable: YES | Default: None
+opened_at | timestamp without time zone | Nullable: YES | Default: now()
+closed_at | timestamp without time zone | Nullable: YES | Default: None
+status | text | Nullable: YES | Default: None
+score | text | Nullable: YES | Default: None
+trend | text | Nullable: YES | Default: None
 notes | text | Nullable: YES | Default: None
 
-===== Structure of table: strategy_log =====
-id | integer | Nullable: NO | Default: nextval('strategy_log_id_seq'::regclass)
+===== Structure of table: dictionary =====
+id | integer | Nullable: NO | Default: nextval('dictionary_id_seq'::regclass)
+keyword | text | Nullable: NO | Default: None
+type | text | Nullable: NO | Default: None
+value | text | Nullable: NO | Default: None
+weight | numeric | Nullable: YES | Default: 1.0
+source | text | Nullable: YES | Default: 'manual'::text
+is_active | boolean | Nullable: YES | Default: true
+created_at | timestamp without time zone | Nullable: YES | Default: now()
+updated_at | timestamp without time zone | Nullable: YES | Default: now()
+
+===== Structure of table: ohlcv =====
+id | integer | Nullable: NO | Default: nextval('ohlcv_id_seq'::regclass)
 pair | text | Nullable: NO | Default: None
+timestamp | timestamp without time zone | Nullable: NO | Default: None
 timeframe | text | Nullable: NO | Default: None
-date | timestamp without time zone | Nullable: NO | Default: None
-signal | text | Nullable: NO | Default: None
-source | text | Nullable: YES | Default: None
-confidence | numeric | Nullable: YES | Default: None
-extra | jsonb | Nullable: YES | Default: None
-
-===== Structure of table: watchlist =====
-id | integer | Nullable: NO | Default: nextval('watchlist_id_seq'::regclass)
-pair | text | Nullable: NO | Default: None
-enabled | boolean | Nullable: YES | Default: true
-mode | text | Nullable: YES | Default: 'futures'::text
-default_qty | numeric | Nullable: YES | Default: None
-max_loss_per_trade | numeric | Nullable: YES | Default: None
-rr_ratio | numeric | Nullable: YES | Default: None
-notes | text | Nullable: YES | Default: None
+open | numeric | Nullable: YES | Default: None
+high | numeric | Nullable: YES | Default: None
+low | numeric | Nullable: YES | Default: None
+close | numeric | Nullable: YES | Default: None
+volume | numeric | Nullable: YES | Default: None
+quote_volume | numeric | Nullable: YES | Default: None
+trade_count | integer | Nullable: YES | Default: None
+created_at | timestamp without time zone | Nullable: YES | Default: CURRENT_TIMESTAMP
 
 ===== Structure of table: sentiment_data =====
 id | integer | Nullable: NO | Default: nextval('sentiment_data_id_seq'::regclass)
 pair | text | Nullable: YES | Default: None
-timestamp | timestamp without time zone | Nullable: NO | Default: None
+timestamp | timestamp without time zone | Nullable: YES | Default: None
 source | text | Nullable: YES | Default: None
 sentiment_score | numeric | Nullable: YES | Default: None
 sentiment_summary | text | Nullable: YES | Default: None
@@ -45,53 +138,7 @@ raw_xml | text | Nullable: YES | Default: None
 ===== Structure of table: onchain_data =====
 id | integer | Nullable: NO | Default: nextval('onchain_data_id_seq'::regclass)
 pair | text | Nullable: YES | Default: None
-timestamp | timestamp without time zone | Nullable: NO | Default: None
+timestamp | timestamp without time zone | Nullable: YES | Default: None
 metric | text | Nullable: YES | Default: None
 value | numeric | Nullable: YES | Default: None
-extra | jsonb | Nullable: YES | Default: None
 raw_xml | text | Nullable: YES | Default: None
-
-===== Structure of table: smc_map =====
-id | integer | Nullable: NO | Default: nextval('smc_map_id_seq'::regclass)
-pair | text | Nullable: NO | Default: None
-date | date | Nullable: NO | Default: None
-bias | text | Nullable: YES | Default: None
-zone_description | text | Nullable: YES | Default: None
-raw_xml | text | Nullable: YES | Default: None
-
-===== Structure of table: snapshot_daily =====
-id | integer | Nullable: NO | Default: nextval('snapshot_daily_id_seq'::regclass)
-pair | text | Nullable: NO | Default: None
-date | date | Nullable: NO | Default: None
-trend | text | Nullable: YES | Default: None
-bias | text | Nullable: YES | Default: None
-smc_zone | text | Nullable: YES | Default: None
-created_at | timestamp without time zone | Nullable: YES | Default: CURRENT_TIMESTAMP
-
-===== Structure of table: snapshot_4h =====
-id | integer | Nullable: NO | Default: nextval('snapshot_4h_id_seq'::regclass)
-pair | text | Nullable: NO | Default: None
-datetime | timestamp without time zone | Nullable: NO | Default: None
-structure | text | Nullable: YES | Default: None
-signal | text | Nullable: YES | Default: None
-confidence | double precision | Nullable: YES | Default: None
-created_at | timestamp without time zone | Nullable: YES | Default: CURRENT_TIMESTAMP
-
-===== Structure of table: snapshot_15m =====
-id | integer | Nullable: NO | Default: nextval('snapshot_15m_id_seq'::regclass)
-pair | text | Nullable: NO | Default: None
-datetime | timestamp without time zone | Nullable: NO | Default: None
-entry_signal | text | Nullable: YES | Default: None
-rsi | double precision | Nullable: YES | Default: None
-volume | double precision | Nullable: YES | Default: None
-macd | double precision | Nullable: YES | Default: None
-adx | double precision | Nullable: YES | Default: None
-created_at | timestamp without time zone | Nullable: YES | Default: CURRENT_TIMESTAMP
-
-===== Structure of table: narrative_tracker =====
-id | integer | Nullable: NO | Default: nextval('narrative_tracker_id_seq'::regclass)
-pair | text | Nullable: NO | Default: None
-narrative | text | Nullable: YES | Default: None
-timeframe | text | Nullable: YES | Default: None
-note | text | Nullable: YES | Default: None
-detected_on | timestamp without time zone | Nullable: YES | Default: CURRENT_TIMESTAMP

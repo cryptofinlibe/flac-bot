@@ -1,67 +1,35 @@
-import ccxt
-from datetime import datetime
-from FLAC.db.db_writer import get_open_positions, update_position_exit, get_tp_sl_for_pair
+from FLAC.utils.price_utils import get_price
+from FLAC.db.db_reader import get_open_positions
+from FLAC.db.db_writer import close_position
 from FLAC.utils.notifier import send_telegram_message
 
-BINANCE = ccxt.binance({
-    'options': {'defaultType': 'spot'}
-})
-
-def get_price(pair):
-    try:
-        return BINANCE.fetch_ticker(pair)['last']
-    except Exception as e:
-        print(f"❌ Error fetching price for {pair}: {e}")
-        return None
+TP_THRESHOLD = 0.03  # +3%
+SL_THRESHOLD = -0.02  # -2%
 
 def run_exit_tracker():
-    print(f"🕐 Exit tracker running at {datetime.utcnow()}")
-    open_positions = get_open_positions()
-    if not open_positions:
-        print("📟 No open positions in DB.")
-        return
+    positions = get_open_positions()
+    closed = []
 
-    messages = []
+    for pos in positions:
+        pair = pos["pair"]
+        entry_price = pos["entry_price"]
+        direction = pos["direction"]
+        current_price = get_price(pair)
 
-    for pos in open_positions:
-        pair = pos['pair']
-        entry_price = float(pos['entry_price'])
-        position_id = pos['id']
-
-        tp_pct, sl_pct = get_tp_sl_for_pair(pair)
-
-        now_price = get_price(pair)
-        if now_price is None:
+        if current_price is None:
             continue
 
-        change_pct = (now_price - entry_price) / entry_price
-        status = None
+        if direction == "long":
+            gain_pct = (current_price - entry_price) / entry_price
+        else:  # short
+            gain_pct = (entry_price - current_price) / entry_price
 
-        if change_pct >= tp_pct:
-            status = "TP"
-        elif change_pct <= -sl_pct:
-            status = "SL"
+        if gain_pct >= TP_THRESHOLD:
+            close_position(pair, current_price)
+            closed.append(f"🎯 TP Hit: {pair} {direction.upper()} +{gain_pct*100:.2f}%")
+        elif gain_pct <= SL_THRESHOLD:
+            close_position(pair, current_price)
+            closed.append(f"⚠️ SL Hit: {pair} {direction.upper()} {gain_pct*100:.2f}%")
 
-        if status:
-            pnl_pct = round(change_pct * 100, 2)
-            try:
-                update_position_exit(
-                    position_id=position_id,
-                    exit_price=now_price,
-                    exit_time=datetime.utcnow(),
-                    pnl=pnl_pct
-                )
-                messages.append(f"💸 {pair} hit {status} | PnL: {pnl_pct:.2f}%")
-            except Exception as e:
-                print(f"❌ Failed to close {pair}: {e}")
-
-    if messages:
-        print("✅ Updated positions:")
-        for m in messages:
-            print(m)
-        send_telegram_message("💼 Exit Tracker:\n" + "\n".join(messages))
-    else:
-        print("📈 No TP/SL triggered.")
-
-if __name__ == "__main__":
-    run_exit_tracker()
+    if closed:
+        send_telegram_message("🔒 Exit Tracker Update:\n" + "\n".join(closed))

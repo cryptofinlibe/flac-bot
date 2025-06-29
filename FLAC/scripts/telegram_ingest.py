@@ -1,19 +1,20 @@
 import time
-from FLAC.utils.parse_channel_to_xml import parse_channel_messages
+from FLAC.utils.parse_channel import parse_channel_messages
 
 def run_ingest():
     print("🚀 Starting Telegram Channel Ingest")
 
-    channels = {
-        "flac_sentiment": "S",
-        "flac_onchain": "O",
-        "flac_technical": "T"
-    }
+    # Semua channel, tidak pakai tag eksplisit
+    channel_list = [
+        "flac_sentiment",
+        "flac_onchain",
+        "flac_technical"
+    ]
 
-    for channel, tag in channels.items():
+    for channel in channel_list:
         print(f"📥 Scraping channel: {channel}")
         try:
-            parse_channel_messages(channel, tag)
+            parse_channel_messages(channel)
         except Exception as e:
             print(f"❌ Failed to parse {channel}: {e}")
         time.sleep(1)

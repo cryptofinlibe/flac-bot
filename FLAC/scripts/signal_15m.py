@@ -1,41 +1,31 @@
-import os
 import pandas as pd
 from datetime import datetime
-from FLAC.utils.smart_fetch import smart_fetch
-from FLAC.scripts.get_active_pairs import get_active_pairs
-from FLAC.utils.notifier import send_telegram_message
-from FLAC.utils.position_handler import open_position
-from FLAC.scripts.exit_tracker import run_exit_tracker
-from FLAC.scripts.strategy_decision import analyze_with_sentiment
-from FLAC.db.db_writer import insert_snapshot_15m
-
 from ta.trend import SMAIndicator, MACD, ADXIndicator
 from ta.momentum import RSIIndicator
 
+from FLAC.utils.smart_fetch import smart_fetch
+from FLAC.utils.notifier import send_telegram_message
+from FLAC.utils.position_handler import open_position
+from FLAC.db.db_reader import get_active_pairs_by_timeframe
+from FLAC.db.db_reader import get_latest_smc_bias
+from FLAC.db.db_reader import get_latest_snapshot_4h
+from FLAC.db.db_writer import insert_snapshot_15m
+from FLAC.scripts.strategy_decision import analyze_with_sentiment
+from FLAC.scripts.exit_tracker import run_exit_tracker
+
+# === Parameter sinyal ===
 VOLUME_MULTIPLIER = 1.8
 RSI_LONG_THRESHOLD = 55
 RSI_SHORT_THRESHOLD = 45
 MACD_CONFIRM = 0
 ADX_THRESHOLD = 20
 
-
-def load_smc_bias():
-    from FLAC.utils.smc_loader import get_latest_smc_bias
-    return get_latest_smc_bias()
-
-
-def validate_4h(pair):
-    from FLAC.utils.snapshot_loader import get_latest_snapshot_4h
-    return get_latest_snapshot_4h(pair)
-
-
 def run_signal_15m():
-    today_str = datetime.utcnow().strftime('%Y%m%d')
-    config = get_active_pairs()
-    pairs = config.get("15m", [])
-    smc_bias = load_smc_bias()
+    today_str = datetime.utcnow().strftime('%Y-%m-%d %H:%M')
+    print(f"🚨 Running 15M Signal Scanner — {today_str}")
+
+    pairs = get_active_pairs_by_timeframe('15m')
     triggered = []
-    signals = []
 
     for pair in pairs:
         try:
@@ -53,20 +43,20 @@ def run_signal_15m():
             df['adx'] = ADXIndicator(df['high'], df['low'], df['close']).adx()
 
             latest = df.iloc[-1]
+            timestamp = latest['timestamp']
+            close = latest['close']
+            volume = latest['volume']
             sma = latest['sma20']
             vol_avg = latest['vol_ma20']
             rsi = latest['rsi']
             macd = latest['macd']
             adx = latest['adx']
-            close = latest['close']
-            volume = latest['volume']
 
-            smc = smc_bias.get(pair.replace('_', '/'), None)
-            confirm_4h = validate_4h(pair)
-
-            if not smc or not confirm_4h or smc != confirm_4h:
+            # Ambil SMC dan 4H trend
+            smc = get_latest_smc_bias(pair)
+            structure = get_latest_snapshot_4h(pair)
+            if not smc or not structure or smc != structure:
                 continue
-
             if adx < ADX_THRESHOLD:
                 continue
 
@@ -74,39 +64,37 @@ def run_signal_15m():
             if sentiment_info:
                 print(f"[🧠 CONTEXT] {pair} sentiment/onchain info:\n{sentiment_info}\n")
 
+            entry_signal = None
             if smc == "LONG" and close > sma and volume > vol_avg * VOLUME_MULTIPLIER and rsi > RSI_LONG_THRESHOLD and macd > MACD_CONFIRM:
-                signals.append([pair, latest['timestamp'], 'LONG', rsi, volume, macd, adx])
-                triggered.append(f"📈 {pair} LONG @ {close:.2f}")
-                open_position(pair, trend='LONG')
-
+                entry_signal = "LONG"
             elif smc == "SHORT" and close < sma and volume > vol_avg * VOLUME_MULTIPLIER and rsi < RSI_SHORT_THRESHOLD and macd < -MACD_CONFIRM:
-                signals.append([pair, latest['timestamp'], 'SHORT', rsi, volume, macd, adx])
-                triggered.append(f"📉 {pair} SHORT @ {close:.2f}")
-                open_position(pair, trend='SHORT')
+                entry_signal = "SHORT"
+
+            if entry_signal:
+                score = f"{rsi:.1f}-{macd:.2f}-{adx:.1f}"
+                insert_snapshot_15m(
+                    pair=pair,
+                    datetime=timestamp,
+                    entry_signal=entry_signal,
+                    rsi=rsi,
+                    volume=volume,
+                    macd=macd,
+                    adx=adx
+                )
+                open_position(pair, trend=entry_signal, score=score, direction=entry_signal.lower())
+                triggered.append(
+                    f"{'📈' if entry_signal == 'LONG' else '📉'} {pair} {entry_signal} @ {close:.2f} — RSI:{rsi:.1f} Vol:{volume:.0f} ADX:{adx:.1f}"
+                )
 
         except Exception as e:
             print(f"❌ Error processing {pair}: {e}")
 
-    for sig in signals:
-        insert_snapshot_15m(
-            pair=sig[0],
-            timestamp=sig[1],
-            entry_signal=sig[2],
-            rsi=sig[3],
-            volume=sig[4],
-            macd=sig[5],
-            adx=sig[6]
-        )
-
     if triggered:
-        send_telegram_message("🚨 15M Signals:\n" + "\n".join(triggered))
-        print(f"✅ {len(triggered)} signal(s) inserted into DB.")
+        send_telegram_message("⚡ 15M Signals:\n" + "\n".join(triggered))
     else:
-        send_telegram_message("✅ 15M signal check done — no valid signal at this moment.")
-        print("⛔ No valid 15M signal detected")
+        send_telegram_message("✅ 15M scan complete: No valid signal found.")
 
     run_exit_tracker()
-
 
 if __name__ == "__main__":
     run_signal_15m()
